@@ -1,103 +1,81 @@
 // ==UserScript==
-// @name         GeoFS Flight Time Calculator with Toggle
+// @name         GeoFS Flight Time Calculator
 // @namespace    http://tampermonkey.net/
-// @version      1.3
-// @description  Toggleable flight time calculator for GeoFS
+// @version      1.1
+// @description  Adds a flight time calculator to GeoFS based on cruise speed and distance
+// @author       You
 // @match        https://www.geo-fs.com/geofs.php*
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     // Create toggle button
     const toggleBtn = document.createElement('button');
-    toggleBtn.id = 'toggleCalcBtn';
-    toggleBtn.textContent = '🧮 Flight Calc';
-    toggleBtn.style.position = 'fixed';
-    toggleBtn.style.top = '180px';  // ≈ 2.5 inches down
-toggleBtn.style.right = '10px';
-toggleBtn.style.left = '';      // removes left side setting
-    toggleBtn.style.zIndex = '10000';
+    toggleBtn.innerText = '🧮 Flight Time';
+    toggleBtn.style.position = 'absolute';
+    toggleBtn.style.top = '180px';      // Lower on screen
+    toggleBtn.style.right = '10px';     // Right side
+    toggleBtn.style.zIndex = '9999';
     toggleBtn.style.padding = '8px 12px';
-    toggleBtn.style.background = 'rgba(0,0,0,0.7)';
-    toggleBtn.style.color = '#fff';
-    toggleBtn.style.border = 'none';
     toggleBtn.style.borderRadius = '6px';
+    toggleBtn.style.border = 'none';
+    toggleBtn.style.background = '#444';
+    toggleBtn.style.color = '#fff';
     toggleBtn.style.cursor = 'pointer';
-    toggleBtn.style.fontSize = '14px';
-    toggleBtn.style.fontFamily = 'sans-serif';
     document.body.appendChild(toggleBtn);
 
-    let boxVisible = false;
-    let box;
+    // Create calculator box
+    const calcBox = document.createElement('div');
+    calcBox.style.position = 'absolute';
+    calcBox.style.top = '230px';       // Below the button
+    calcBox.style.right = '10px';
+    calcBox.style.padding = '10px';
+    calcBox.style.border = '1px solid #aaa';
+    calcBox.style.background = '#222';
+    calcBox.style.color = '#fff';
+    calcBox.style.zIndex = '9999';
+    calcBox.style.borderRadius = '8px';
+    calcBox.style.display = 'none';
+    calcBox.innerHTML = `
+        <div><b>Flight Time Calculator</b></div>
+        <label>Cruise Speed (kts):</label><br>
+        <input id="cruiseSpeed" type="number" value="160" style="width: 100%;"><br>
+        <label>Distance (nm):</label><br>
+        <input id="distance" type="number" value="80" style="width: 100%;"><br>
+        <label>Buffer Time (min):</label><br>
+        <input id="bufferTime" type="number" value="10" style="width: 100%;"><br><br>
+        <button id="calcBtn">Calculate</button>
+        <div id="result" style="margin-top: 10px;"></div>
+        <button id="closeCalc" style="margin-top: 8px;">✖️ Close</button>
+    `;
+    document.body.appendChild(calcBox);
 
-    toggleBtn.onclick = () => {
-        if (boxVisible) {
-            box.style.display = 'none';
-            boxVisible = false;
+    // Toggle visibility
+    toggleBtn.addEventListener('click', () => {
+        calcBox.style.display = calcBox.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // Close button
+    document.getElementById('closeCalc')?.addEventListener('click', () => {
+        calcBox.style.display = 'none';
+    });
+
+    // Calculation logic
+    document.getElementById('calcBtn')?.addEventListener('click', () => {
+        const speed = parseFloat(document.getElementById('cruiseSpeed').value);
+        const distance = parseFloat(document.getElementById('distance').value);
+        const buffer = parseFloat(document.getElementById('bufferTime').value);
+
+        if (!isNaN(speed) && !isNaN(distance)) {
+            const flightTime = distance / speed * 60 + buffer;
+            const mins = Math.floor(flightTime);
+            const secs = Math.round((flightTime - mins) * 60);
+            document.getElementById('result').innerText =
+                `Flight time: ${mins} min ${secs} sec`;
         } else {
-            if (!box) {
-                createCalculatorBox();
-            }
-            box.style.display = 'block';
-            boxVisible = true;
+            document.getElementById('result').innerText = 'Enter valid numbers.';
         }
-    };
-
-    function createCalculatorBox() {
-        box = document.createElement("div");
-        box.id = "geofs-timecalc";
-        box.style.position = "fixed";
-        box.style.top = "50px";
-        box.style.left = "10px";
-        box.style.background = "rgba(0,0,0,0.85)";
-        box.style.color = "#fff";
-        box.style.padding = "15px";
-        box.style.borderRadius = "10px";
-        box.style.zIndex = "9999";
-        box.style.fontFamily = "sans-serif";
-        box.style.width = "260px";
-        box.style.boxShadow = "0 0 10px #000";
-
-        box.innerHTML = `
-            <div style="text-align:right; margin:-10px -10px 5px 0;">
-                <button id="closeBtn" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">&times;</button>
-            </div>
-            <strong>🧮 Flight Time Calculator</strong><br><br>
-            Speed (KTAS):<br>
-            <input id="speedInput" type="number" placeholder="e.g. 160" style="width:100%;"><br><br>
-            Distance (NM):<br>
-            <input id="distanceInput" type="number" placeholder="e.g. 90" style="width:100%;"><br><br>
-            Buffer time (min):<br>
-            <input id="bufferInput" type="number" value="10" style="width:100%;"><br><br>
-            <button id="calcBtn" style="width:100%; padding:6px; cursor:pointer;">Calculate</button>
-            <p id="result" style="margin-top:10px;"></p>
-        `;
-
-        document.body.appendChild(box);
-
-        document.getElementById("closeBtn").onclick = () => {
-            box.style.display = 'none';
-            boxVisible = false;
-        };
-
-        document.getElementById("calcBtn").onclick = () => {
-            const speed = parseFloat(document.getElementById("speedInput").value);
-            const distance = parseFloat(document.getElementById("distanceInput").value);
-            const buffer = parseFloat(document.getElementById("bufferInput").value);
-
-            if (isNaN(speed) || isNaN(distance) || isNaN(buffer) || speed <= 0) {
-                document.getElementById("result").innerText = "Please enter valid numbers.";
-                return;
-            }
-
-            const cruiseTime = distance / speed * 60; // minutes
-            const totalTime = cruiseTime + buffer;
-
-            document.getElementById("result").innerText =
-                `🕒 Est. Flight Time: ${totalTime.toFixed(1)} min total`;
-        };
-    }
+    });
 })();
-
