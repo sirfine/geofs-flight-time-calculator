@@ -16,7 +16,8 @@
     toggleBtn.textContent = '🧮 Flight Calc';
     toggleBtn.style.position = 'fixed';
     toggleBtn.style.top = '10px';
-    toggleBtn.style.left = '10px';
+toggleBtn.style.right = '10px';
+toggleBtn.style.left = ''; // remove left positioning
     toggleBtn.style.zIndex = '10000';
     toggleBtn.style.padding = '8px 12px';
     toggleBtn.style.background = 'rgba(0,0,0,0.7)';
