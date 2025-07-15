@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         GeoFS Flight Time Calculator
+// @name         GeoFS Flight Time Calculator (Draggable)
 // @namespace    http://tampermonkey.net/
-// @version      1.1
-// @description  Adds a flight time calculator to GeoFS based on cruise speed and distance
+// @version      1.2
+// @description  Adds a draggable flight time calculator to GeoFS based on cruise speed and distance
 // @author       You
 // @match        https://www.geo-fs.com/geofs.php*
 // @grant        none
@@ -15,21 +15,45 @@
     const toggleBtn = document.createElement('button');
     toggleBtn.innerText = '🧮 Flight Time';
     toggleBtn.style.position = 'absolute';
-    toggleBtn.style.top = '180px';      // Lower on screen
-    toggleBtn.style.right = '10px';     // Right side
+    toggleBtn.style.top = '10px';
+    toggleBtn.style.right = '10px';
     toggleBtn.style.zIndex = '9999';
     toggleBtn.style.padding = '8px 12px';
     toggleBtn.style.borderRadius = '6px';
     toggleBtn.style.border = 'none';
     toggleBtn.style.background = '#444';
     toggleBtn.style.color = '#fff';
-    toggleBtn.style.cursor = 'pointer';
+    toggleBtn.style.cursor = 'move';  // draggable indicator
     document.body.appendChild(toggleBtn);
+
+    // Make button draggable
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    toggleBtn.addEventListener('mousedown', function (e) {
+        isDragging = true;
+        offsetX = e.clientX - toggleBtn.getBoundingClientRect().left;
+        offsetY = e.clientY - toggleBtn.getBoundingClientRect().top;
+        toggleBtn.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', function (e) {
+        if (isDragging) {
+            toggleBtn.style.left = `${e.clientX - offsetX}px`;
+            toggleBtn.style.top = `${e.clientY - offsetY}px`;
+            toggleBtn.style.right = ''; // clear right so it doesn’t fight with left
+        }
+    });
+
+    document.addEventListener('mouseup', function () {
+        isDragging = false;
+        toggleBtn.style.cursor = 'move';
+    });
 
     // Create calculator box
     const calcBox = document.createElement('div');
     calcBox.style.position = 'absolute';
-    calcBox.style.top = '230px';       // Below the button
+    calcBox.style.top = '60px';
     calcBox.style.right = '10px';
     calcBox.style.padding = '10px';
     calcBox.style.border = '1px solid #aaa';
