@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         GeoFS Flight Time Calculator (Draggable)
+// @name         GeoFS Flight Time Calculator (Draggable Fixed)
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @description  Adds a draggable flight time calculator to GeoFS based on cruise speed and distance
 // @author       You
 // @match        https://www.geo-fs.com/geofs.php*
@@ -16,32 +16,34 @@
     toggleBtn.innerText = '🧮 Flight Time';
     toggleBtn.style.position = 'absolute';
     toggleBtn.style.top = '10px';
-    toggleBtn.style.right = '10px';
+    toggleBtn.style.left = 'calc(100% - 120px)'; // Start near right side
     toggleBtn.style.zIndex = '9999';
     toggleBtn.style.padding = '8px 12px';
     toggleBtn.style.borderRadius = '6px';
     toggleBtn.style.border = 'none';
     toggleBtn.style.background = '#444';
     toggleBtn.style.color = '#fff';
-    toggleBtn.style.cursor = 'move';  // draggable indicator
+    toggleBtn.style.cursor = 'move';
     document.body.appendChild(toggleBtn);
 
     // Make button draggable
     let isDragging = false;
-    let offsetX, offsetY;
+    let offsetX = 0;
+    let offsetY = 0;
 
     toggleBtn.addEventListener('mousedown', function (e) {
         isDragging = true;
         offsetX = e.clientX - toggleBtn.getBoundingClientRect().left;
         offsetY = e.clientY - toggleBtn.getBoundingClientRect().top;
         toggleBtn.style.cursor = 'grabbing';
+        e.preventDefault();
     });
 
     document.addEventListener('mousemove', function (e) {
         if (isDragging) {
             toggleBtn.style.left = `${e.clientX - offsetX}px`;
             toggleBtn.style.top = `${e.clientY - offsetY}px`;
-            toggleBtn.style.right = ''; // clear right so it doesn’t fight with left
+            toggleBtn.style.right = ''; // disable right anchor to allow movement
         }
     });
 
@@ -54,7 +56,7 @@
     const calcBox = document.createElement('div');
     calcBox.style.position = 'absolute';
     calcBox.style.top = '60px';
-    calcBox.style.right = '10px';
+    calcBox.style.left = 'calc(100% - 260px)'; // Start near right side
     calcBox.style.padding = '10px';
     calcBox.style.border = '1px solid #aaa';
     calcBox.style.background = '#222';
@@ -82,12 +84,12 @@
     });
 
     // Close button
-    document.getElementById('closeCalc')?.addEventListener('click', () => {
+    calcBox.querySelector('#closeCalc').addEventListener('click', () => {
         calcBox.style.display = 'none';
     });
 
     // Calculation logic
-    document.getElementById('calcBtn')?.addEventListener('click', () => {
+    calcBox.querySelector('#calcBtn').addEventListener('click', () => {
         const speed = parseFloat(document.getElementById('cruiseSpeed').value);
         const distance = parseFloat(document.getElementById('distance').value);
         const buffer = parseFloat(document.getElementById('bufferTime').value);
